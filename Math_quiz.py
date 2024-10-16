@@ -81,10 +81,11 @@ def check_answer():
     
     if guess == answer:
         correct_attempt += 1
-        result_label.config(text="Correct!", fg="green")
+        result_label.config(text="Correct!", fg="green", bg='#D3EE98', font="lucida 12 bold")
+
     else:
         wrong_attempt += 1
-        result_label.config(text="Incorrect!", fg="red")
+        result_label.config(text="Incorrect!", fg="red", bg='#D3EE98', font="lucida 12 bold")
     
     next_problem()
 
@@ -119,7 +120,7 @@ def reset_quiz():
 # Tkinter GUI Setup
 root = Tk()
 root.title("Math Quiz Game")
-root.geometry("400x300")    
+root.geometry("550x425")    
 
 # Labels and Entry fields for user configuration
 Label(root, text="Enter the number of problems:", borderwidth=2, bg='#433878', fg='#e0e0e0',font="comicsansms 15", relief=RIDGE, padx=5, pady=5).grid(pady=5, row=0 , column=0)
@@ -135,7 +136,7 @@ max_operand_entry = Entry(root, borderwidth=2, bg='#e0e0e0', fg='#433878',font="
 max_operand_entry.grid(row=2, column=1, padx=10, ipadx=4, ipady=4)
 
 # Problem label
-problem_label = Label(root, text="Ready to start the quiz!", font="Helvetica 25", pady=10, bg='gray', fg='black')
+problem_label = Label(root, text="Ready to start the quiz!", font="Helvetica 25", pady=10, bg='#7E60BF', fg='#FFE1FF')
 problem_label.grid(row=3, columnspan=2, pady=15)
 
 # Expression label
