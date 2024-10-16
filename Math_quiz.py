@@ -1,6 +1,9 @@
 import random
 import time
+from tkinter import *
+from tkinter import messagebox
 
+# Operators and ranges
 OPERATORS = ['+', '-', '*', '/']
 MIN_OPERAND = 3
 MAX_OPERAND = 12
@@ -10,110 +13,147 @@ TOTAL_PROBLEM = 10
 def generateProblem(min_operand, max_operand):
     num1 = random.randint(min_operand, max_operand)
     num2 = random.randint(min_operand, max_operand)
-    operators = random.choice(OPERATORS)
+    operator = random.choice(OPERATORS)
     
-    if operators == '+':
+    if operator == '+':
         answer = num1 + num2
-    elif operators == '-':
+    elif operator == '-':
         answer = num1 - num2
-    elif operators == '*':
+    elif operator == '*':
         answer = num1 * num2
-    elif operators == '/':
-        # Ensure the denominator is not zero and limit to 2 decimal places
+    elif operator == '/':
         while num2 == 0:
             num2 = random.randint(min_operand, max_operand)
-        answer = round(num1 / num2, 2) 
+        answer = round(num1 / num2, 2)
 
-    exp = f"{num1} {operators} {num2}"
-    return exp, answer
+    expression = f"{num1} {operator} {num2}"
+    return expression, answer
 
-# Function to get user input for configuration with validation
-def get_user_config():
-    while True:
-        try:
-            total_problem_input = int(input("Enter the number of problems (default is 10): "))
-            if total_problem_input:
-                total_problem = total_problem_input
-            else:
-                total_problem = TOTAL_PROBLEM
+# Function to handle quiz game start
+def start_quiz():
+    global current_problem, correct_attempt, wrong_attempt, start_time
 
-            min_operand_input = int(input("Enter the minimum operand (default is 3): "))
-            if min_operand_input:
-                min_operand = min_operand_input
-            else:
-                min_operand = MIN_OPERAND
-
-            max_operand_input = int(input("Enter the maximum operand (default is 12): "))
-            if max_operand_input:
-                max_operand = max_operand_input
-            else:
-                max_operand = MAX_OPERAND
-
-            # Ensure that min_operand is less than or equal to max_operand
-            if min_operand > max_operand:
-                print("Minimum operand cannot be greater than maximum operand. Please try again.")
-                continue
-
-            return total_problem, min_operand, max_operand
-
-        except ValueError:
-            print("Invalid input. Please enter a numeric value or press Enter to use the default value.")
-
-# Main function to handle the quiz game
-def play_quiz():
     correct_attempt = 0
     wrong_attempt = 0
+    current_problem = 0
 
-    # Get user configuration for the quiz
-    total_problem, min_operand, max_operand = get_user_config()
+    # Get the user input from Entry widgets
+    try:
+        total_problem = int(total_problems_entry.get())
+        min_operand = int(min_operand_entry.get())
+        max_operand = int(max_operand_entry.get())
+    except ValueError:
+        messagebox.showerror("Input Error", "Please enter valid numbers!")
+        return
+    
+    if min_operand > max_operand:
+        messagebox.showerror("Input Error", "Minimum operand cannot be greater than maximum operand!")
+        return
 
-    print("Press Enter to start the game:")
-    input()
-    print("---------------------------------")
-
-    # Start the timer
+    # Start timer
     start_time = time.time()
+    
+    # Generate the first problem
+    next_problem()
+    
+def next_problem():
+    global current_problem, exp, answer
 
-    # Loop through problems
-    for i in range(total_problem):
-        exp, answer = generateProblem(min_operand, max_operand)
-        attempts = 0
+    if current_problem < int(total_problems_entry.get()):
+        current_problem += 1
+        problem_label.config(text=f"Problem #{current_problem}")
+        
+        # Generate problem
+        exp, answer = generateProblem(int(min_operand_entry.get()), int(max_operand_entry.get()))
+        expression_label.config(text=f"{exp} = ")
+        answer_entry.delete(0, END)  # Clear input field
+    else:
+        end_quiz()
 
-        while True:
-            try:
-                guess_input = float(input(f"Problem #{i + 1}: {exp} = "))
-                guess = guess_input
-                attempts += 1
+def check_answer():
+    global correct_attempt, wrong_attempt
+    
+    try:
+        guess = float(answer_entry.get())
+    except ValueError:
+        messagebox.showerror("Input Error", "Please enter a numeric value!")
+        return
+    
+    if guess == answer:
+        correct_attempt += 1
+        result_label.config(text="Correct!", fg="green")
+    else:
+        wrong_attempt += 1
+        result_label.config(text="Incorrect!", fg="red")
+    
+    next_problem()
 
-                if(guess == answer):
-                    print(f"Correct! You got it in {attempts} attempts.")
-                    correct_attempt += 1
-                    break
-                else:
-                    print("Incorrect! Try again.")
-                    wrong_attempt += 1
-
-            except ValueError:
-                print("Invalid input. Please enter a numeric value.")
-
-    # End the timer
+def end_quiz():
     end_time = time.time()
-    # Calculate total time taken
     total_time = round(end_time - start_time, 2)
+    
+    # Display result in a messagebox
+    result_message = (f"Nice Work! You have completed this challenge in {total_time} seconds.\n"
+                      f"You answered {correct_attempt} out of {total_problems_entry.get()} problems correctly.\n"
+                      f"You made a total of {wrong_attempt} incorrect attempts.")
+    
+    messagebox.showinfo("Quiz Completed", result_message)
+    reset_quiz()
 
-    # Display the results
-    print("----------------------------------")
-    print(f"Nice Work! You have completed this challenge in {total_time} seconds.")
-    print(f"You answered {correct_attempt} out of {total_problem} problems correctly.")
-    print(f"You made a total of {wrong_attempt} incorrect attempts.")
-    print("----------------------------------")
+# Function to reset the GUI for a new game
+def reset_quiz():
+    total_problems_entry.delete(0, END)
+    total_problems_entry.insert(0, TOTAL_PROBLEM)
+    
+    min_operand_entry.delete(0, END)
+    min_operand_entry.insert(0, MIN_OPERAND)
+    
+    max_operand_entry.delete(0, END)
+    max_operand_entry.insert(0, MAX_OPERAND)
+    
+    problem_label.config(text="Ready to start the quiz!")
+    expression_label.config(text="")
+    result_label.config(text="")
+    answer_entry.delete(0, END)
 
-# Main loop to ask if the user wants to play again
-if  __name__ == "__main__":
+# Tkinter GUI Setup
+root = Tk()
+root.title("Math Quiz Game")
+root.geometry("400x300")    
 
-    while True:
-        play_quiz()
-        play_again = input("Do you want to play again? (yes/no): ").strip().lower()
-        if play_again not in ['yes', 'y']:
-            print("Thank you for playing! Goodbye.")
-            break
+# Labels and Entry fields for user configuration
+Label(root, text="Enter the number of problems:", borderwidth=2, bg='#433878', fg='#e0e0e0',font="comicsansms 15", relief=RIDGE, padx=5, pady=5).grid(pady=5, row=0 , column=0)
+total_problems_entry = Entry(root, borderwidth=2, bg='#e0e0e0', fg='#433878',font="comicsansms 15", relief=RIDGE)
+total_problems_entry.grid(row=0, column=1, padx=10, ipadx=4, ipady=4)
+
+Label(root, text="Enter the minimum operand:", borderwidth=2, bg='#433878', fg='#e0e0e0',font="comicsansms 15", relief=RIDGE, padx=5, pady=5).grid(pady=5, row=1 , column=0)
+min_operand_entry = Entry(root, borderwidth=2, bg='#e0e0e0', fg='#433878',font="comicsansms 15", relief=RIDGE)
+min_operand_entry.grid(row=1, column=1, padx=10, ipadx=4, ipady=4)
+
+Label(root, text="Enter the maximum operand:", borderwidth=2, bg='#433878', fg='#e0e0e0',font="comicsansms 15", relief=RIDGE, padx=5, pady=5).grid(pady=5, row=2 , column=0)
+max_operand_entry = Entry(root, borderwidth=2, bg='#e0e0e0', fg='#433878',font="comicsansms 15", relief=RIDGE)
+max_operand_entry.grid(row=2, column=1, padx=10, ipadx=4, ipady=4)
+
+# Problem label
+problem_label = Label(root, text="Ready to start the quiz!", font="Helvetica 25", pady=10, bg='gray', fg='black')
+problem_label.grid(row=3, columnspan=2, pady=15)
+
+# Expression label
+expression_label = Label(root, text="", font=("Helvetica", 14))
+expression_label.grid(row=4, columnspan=2)
+
+# Entry for answer
+answer_entry = Entry(root, borderwidth=2, bg='#e0e0e0', fg='#433878',font="comicsansms 15", relief=RIDGE)
+answer_entry.grid(row=5, columnspan=2, padx=10, ipadx=4, ipady=4)
+
+# Result label
+result_label = Label(root, text="", font=("Helvetica", 12))
+result_label.grid(row=6, columnspan=2)
+
+# Buttons to start the game and check answers
+Button(root, text="Start Quiz", command=start_quiz, bg='#433878', fg='#e0e0e0', padx=5, pady=5).grid(row=7, column=0, pady=10)
+Button(root, text="Submit Answer", command=check_answer, bg='#433878', fg='#e0e0e0', padx=5, pady=5).grid(row=7, column=1)
+
+# Start the Tkinter event loop
+reset_quiz()
+root.mainloop()
